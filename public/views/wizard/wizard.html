@@ -1,0 +1,226 @@
+<!-- public/views/user.html -->
+
+<div class="user">
+  <div class="jumbotron text-center">
+    <h2>Your task:</h2>
+    <p align="left"> As the operator of the Springfield County travel information service, 
+    you must either (un)book transportation or update the travel information table in order to satisfy the user. The history 
+    of the user's interaction with the system, along with the user's most recent query are 
+    shown below. Use the table control center at the bottom of the page to provide a travel 
+    information table that you think best meets the user's needs. Be sure to take into account 
+    the history when interpreting the most recent request! </p> 
+  </div>
+  <div class="jumbotron text-center">
+    <h3><u> History </u></h3>
+    <div ng-repeat="history in histories" class="container">
+      <p class="bg-primary"> {{history.queryString}} </p>
+      <div ng-class="{'bg-success': history.type == 'bookedTrip', 
+        'bg-warning': history.type == 'unbookedTrip', 'bg-info': history.type == 'queriedTrips', 'bg-danger' : history.type == 'unsat'}">
+        <p ng-if="history.type == 'queriedTrips'"> Response: Retrieved Travel Information Table <span class="glyphicon glyphicon-info-sign"></span></p>
+        <p ng-if="history.type == 'bookedTrip'"> Response: Booked Transportation <span class="glyphicon glyphicon-floppy-saved"></span></p>
+        <p ng-if="history.type == 'unbookedTrip'"> Response: Unbooked Transportation <span class="glyphicon glyphicon-floppy-remove"></span></p>
+        <p ng-if="history.type == 'unsat'"> Response: Unsatisfiable request <span class="glyphicon glyphicon-exclamation-sign"></span> </p>
+        <div ng-if="!(history.type == 'unsat' || history.type == 'default')">
+          <table class="table table-condensed">
+            <thead>
+              <tr>
+                <th style="text-align: center;">Number</th>
+                <th style="text-align: center;">Type</th>
+                <th style="text-align: center;">Origin</th>
+                <th style="text-align: center;">Destination</th>
+                <th style="text-align: center;">Departure</th>
+                <th style="text-align: center;">Arrival</th>
+                <th style="text-align: center;">Meal Service</th>
+                <th style="text-align: center;">Company</th>
+                <th style="text-align: center;">Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="trip in history.trips | limitTo:quantity">
+                <td>{{ trip.number }}</td>
+                <td>{{ trip.type }}</td>
+                <td>{{ trip.from }}</td>
+                <td>{{ trip.to }}</td>
+                <td>{{ trip.departTime | date : 'MMM d, h:mm a' : local}}</td>
+                <td>{{ trip.arriveTime | date : 'MMM d, h:mm a' : local}}</td>
+                <td>{{ helpers.boolToYesNo(trip.meal) }}</td>
+                <td>{{ trip.company }}</td>
+                <td> ${{ trip.fare }} </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <hr ng-if="$index != histories.length -1">
+    <hr ng-if="$index != histories.length -1">
+    </div>
+  </div>
+  <div class="jumbotron text-center">
+    <h3><u>User's latest request</u></h3> 
+    <p>"{{state.userStrings[state.userStrings.length - 1]}}"</p>
+  </div>
+  <div class="jumbotron text-center">
+    <h3> <u> Booking Control Center </u> </h3>
+    <form role="form">
+      <div class="form-group">
+        <label for=booking> Book transportation (by number): </label>
+        <input type="number" class="form-control" id="booking" ng-model="bookNum" style="display: inline-block; width: 200px;"> </p>
+      </div>
+       <div class="form-group">
+        <button type="submit" ng-click="book(bookNum)">Book</button>
+        <button type="submit" ng-click="unbook(bookNum)">Unbook</button>
+      </div> 
+  </form>
+  <alert ng-repeat="alert in alerts" type="{{alert.type}}" close="closeAlert($index)">{{alert.msg}}</alert>
+  <hr>
+    <h3> <u>Table Control Center</u> </h3>
+    <form role="form">
+      <div class="form-group">
+        <label class="radio-inline">
+          <input type="radio" id="typeradio1" ng-model="wizardData.type" value="Flight"> Show flights
+        </label>
+        &nbsp
+        <label class="radio-inline">
+          <input type="radio" id="typeradio2" ng-model="wizardData.type" value="Train"> Show trains
+        </label>
+        &nbsp
+        <label class="radio-inline">
+          <input type="radio" id="typeradio3" ng-model="wizardData.type" value="Bus"> Show buses
+        </label>
+      </div>
+      <div class="form-group">
+        <label for="from"> Origin: </label>
+        <select id="from" ng-model="wizardData.from" >
+          <option></option>
+          <option ng-repeat="city in goal.world.cities">{{city}}</option>
+        </select>
+        &nbsp
+        <label for="to"> Destination: </label>
+        <select id="to" ng-model="wizardData.to" >
+          <option></option>
+          <option ng-repeat="city in goal.world.cities">{{city}}</option>
+        </select>
+      </div>
+      <div class = "form-group">
+        <label for="farelt"> Price less than: </label>
+        <input type="number" id="farelt" ng-model="wizardData.fare_$lt" min="0" max="999" step="10">
+        &nbsp
+        <label for="faregt"> Price greater than: </label>
+        <input type="number" id="faregt" ng-model="wizardData.fare_$gt" min="0" max="999" step="10">
+      </div>
+      <div class = "form-group">
+        <label for="company"> Company: </label>
+        <select id="company" ng-multiple="true" ng-model="wizardData.company" >
+          <option></option>
+          <option ng-repeat="company in goal.world.companies">{{company}}</option>
+        </select>
+        &nbsp
+        <label for = "meal"> Serves meal </label>
+        <select id="meal" ng-model="wizardData.meal">
+          <option value=""></option>
+          <option value=true > Yes </option>
+          <option value=false> No </option>
+        </select>
+      </div>
+      <div class = "form-group">
+         <div class="dropdown">
+             <a class="dropdown-toggle my-toggle-select" id="departgtd" role="button" data-toggle="dropdown" data-target="#" href="">
+              <label for="departgtd"> Departing after: </label>
+                <div class="input-append"><input type="text" class="input-large" data-ng-model="wizardData.departTime_$gt"><span class="add-on">
+                    <i class="icon-calendar"></i></span>
+                </div>
+             </a>
+          <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+            <datetimepicker data-ng-model="wizardData.departTime_$gt" data-datetimepicker-config="{ dropdownSelector: '.my-toggle-select' }"></datetimepicker>
+          </ul>
+         </div>
+       </div>
+       <div class="form-group">
+          <div class="dropdown">
+             <a class="dropdown-toggle my-toggle-select" id="departgtd" role="button" data-toggle="dropdown" data-target="#" href="">
+              <label for="departgtd"> Departing before: </label>
+                <div class="input-append"><input type="text" class="input-large" data-ng-model="wizardData.departTime_$lt"><span class="add-on">
+                    <i class="icon-calendar"></i></span>
+                </div>
+             </a>
+          <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+            <datetimepicker data-ng-model="wizardData.departTime_$lt" data-datetimepicker-config="{ dropdownSelector: '.my-toggle-select' }"></datetimepicker>
+          </ul>
+         </div>
+       </div>
+        <div class = "form-group">
+         <div class="dropdown">
+             <a class="dropdown-toggle my-toggle-select" id="arrivegtd" role="button" data-toggle="dropdown" data-target="#" href="">
+              <label for="arrivegtd"> Arriving after: </label>
+                <div class="input-append"><input type="text" class="input-large" data-ng-model="wizardData.arriveTime_$gt"><span class="add-on">
+                    <i class="icon-calendar"></i></span>
+                </div>
+             </a>
+          <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+            <datetimepicker data-ng-model="wizardData.arriveTime_$gt" data-datetimepicker-config="{ dropdownSelector: '.my-toggle-select' }"></datetimepicker>
+          </ul>
+         </div>
+       </div>
+       <div class="form-group">
+          <div class="dropdown">
+             <a class="dropdown-toggle my-toggle-select" id="arrivegtd" role="button" data-toggle="dropdown" data-target="#" href="">
+              <label for="arrivegtd"> Arriving before: </label>
+                <div class="input-append"><input type="text" class="input-large" data-ng-model="wizardData.arriveTime_$lt"><span class="add-on">
+                    <i class="icon-calendar"></i></span>
+                </div>
+             </a>
+          <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+            <datetimepicker data-ng-model="wizardData.arriveTime_$lt" data-datetimepicker-config="{ dropdownSelector: '.my-toggle-select' }"></datetimepicker>
+          </ul>
+         </div>
+      </div>
+      <div class = "form-group">
+        <label for="sort"> Sorting options: </label>
+        <select id="sort" ng-model="wizardData.sort">
+          <option value=""></option>
+          <option value="arriveTime : -1">Earliest arrival</option>
+          <option value="departTime : -1">Earliest departure</option>
+          <option value="fare : 1"> Cheapest </option>
+        </select>
+      </div>
+    <!--  <div class = "form-group">
+        <label for="debug"> Debug: </label>
+        <input type="text" id="debug" ng-model="debugString" style="display: inline-block; width: 750px;"> 
+      </div> -->
+    
+      <div class = "form-group">
+        <button type="submit" ng-click="update(wizardData, debugString)">Update Table</button>
+        <button type="submit" ng-disabled="cantSubmit" ng-click="submit()">Submit Table</button>
+        <button type="submit" ng-click="resetControls()">Reset Controls</button>
+        <button type="submit" ng-click="unsat()">Unsatisfiable Request</button>
+      </div>
+          <table class="table table-condensed">
+      <thead>
+        <tr>
+          <th style="text-align: center;">Number</th>
+          <th style="text-align: center;">Type</th>
+          <th style="text-align: center;">Origin</th>
+          <th style="text-align: center;">Destination</th>
+          <th style="text-align: center;">Departure</th>
+          <th style="text-align: center;">Arrival</th>
+          <th style="text-align: center;">Meal Service</th>
+          <th style="text-align: center;">Company</th>
+          <th style="text-align: center;">Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="trip in trips | limitTo:quantity">
+          <td>{{ trip.number }}</td>
+          <td>{{ trip.type }}</td>
+          <td>{{ trip.from }}</td>
+          <td>{{ trip.to }}</td>
+          <td>{{ trip.departTime | date : 'MMM d, h:mm a' : local}}</td>
+          <td>{{ trip.arriveTime | date : 'MMM d, h:mm a' : local}}</td>
+          <td>{{ helpers.boolToYesNo(trip.meal) }}</td>
+          <td>{{ trip.company }}</td>
+          <td> ${{ trip.fare }} </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

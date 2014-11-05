@@ -1,0 +1,82 @@
+<!-- public/views/user.html -->
+
+<div class="user">
+  <div class="jumbotron text-center">
+    <h2>Your task: {{debug}}</h2>
+      <p align="left"> You want to take a trip from {{goal.world.cities[0]}} to 
+      {{goal.world.cities[goal.world.cities.length - 1]}} leaving sometime after
+      {{goal.startTime | date : 'MMM d, h:mm a' : local}}. Unfortunately, Springfield County's 
+      transportation system is terrible! Not only are transit times inconsistent, but you need to travel through 
+      {{goal.world.cities.slice(1, goal.world.cities.length - 2).join(", ")}} and
+      {{goal.world.cities[goal.world.cities.length - 2]}}. Being both in a rush and strapped for cash, 
+      you need to get to {{goal.world.cities[goal.world.cities.length - 1]}} by
+      {{goal.endTime | date : 'MMM d, h:mm a' : local}}, using at most ${{goal.budget}}.
+      You also must use {{goal.needCompany}} at least once (for travel points) 
+      and need to have at least {{goal.numMeals}} meal(s).
+      </p> 
+    <p align="left"> In order to book the trip, you have access to an intelligent travel 
+      database that can provide all the travel information that you need! The database also 
+      has a stored history of previous requests about this trip. You should make use of 
+      this history by building upon what was previously requested, especially since the travel 
+      information table can only display a limited amount of information per request. You can request to book/unbook part of
+      your trip or you can ask a question to modify what the travel information table shows. 
+      </p> 
+   </div>  
+  <div class="jumbotron text-center">
+    <h3><u> History </u></h3>
+    <div ng-repeat="history in histories" class="container">
+      <p class="bg-primary"> {{history.queryString}} </p>
+      <div ng-class="{'bg-success': history.type == 'bookedTrip', 
+        'bg-warning': history.type == 'unbookedTrip', 'bg-info': history.type == 'queriedTrips', 'bg-danger' : history.type == 'unsat'}">
+        <p ng-if="history.type == 'queriedTrips'"> Response: Retrieved Travel Information Table <span class="glyphicon glyphicon-info-sign"></span></p>
+        <p ng-if="history.type == 'bookedTrip'"> Response: Booked Transportation <span class="glyphicon glyphicon-floppy-saved"></span></p>
+        <p ng-if="history.type == 'unbookedTrip'"> Response: Unbooked Transportation <span class="glyphicon glyphicon-floppy-remove"></span></p>
+        <p ng-if="history.type == 'unsat'"> Response: Unsatisfiable request <span class="glyphicon glyphicon-exclamation-sign"></span> </p>
+        <div ng-if="!(history.type == 'unsat')">
+          <table class="table table-condensed">
+            <thead>
+              <tr>
+                <th style="text-align: center;">Number</th>
+                <th style="text-align: center;">Type</th>
+                <th style="text-align: center;">Origin</th>
+                <th style="text-align: center;">Destination</th>
+                <th style="text-align: center;">Departure</th>
+                <th style="text-align: center;">Arrival</th>
+                <th style="text-align: center;">Meal Service</th>
+                <th style="text-align: center;">Company</th>
+                <th style="text-align: center;">Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="trip in history.trips | limitTo:quantity">
+                <td>{{ trip.number }}</td>
+                <td>{{ trip.type }}</td>
+                <td>{{ trip.from }}</td>
+                <td>{{ trip.to }}</td>
+                <td>{{ trip.departTime | date : 'MMM d, h:mm a' : local}}</td>
+                <td>{{ trip.arriveTime | date : 'MMM d, h:mm a' : local}}</td>
+                <td>{{ helpers.boolToYesNo(trip.meal) }}</td>
+                <td>{{ trip.company }}</td>
+                <td> ${{ trip.fare }} </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <hr ng-if="$index != histories.length -1">
+    <hr ng-if="$index != histories.length -1">
+    </div>
+  </div>
+  <div class="jumbotron text-left">
+    <form role="form">
+      <div class="form-group">
+        <label for=query> New query: </label>
+        <input type="text" class="form-control" id="query" ng-model="queryString" style="display: inline-block; width: 750px;"> </p>
+      </div>
+      <div class = "form-group">
+        <button type="submit" ng-click="submit(queryString)">Submit</button>
+      </div> 
+     </div>
+  </div>
+</div>
+
