@@ -95,8 +95,9 @@ app.get('*', function(req, res) {
   res.sendFile(__dirname + '/public/index.html');
 });
 
+app.set('port', (process.env.PORT || 5000));
 // run server!
-var server = app.listen(3000, function () {
+var server = app.listen(app.get('port'), function () {
   var host = server.address().address;
   var port = server.address().port;
   console.log('App listening @ http://%s:%s', host, port);
